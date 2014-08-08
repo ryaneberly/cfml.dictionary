@@ -87,8 +87,15 @@ public class DictionaryManager {
 	}
 	
 	static private void init() {
-		fBuiltInDictionaryPath = "jar:file:" + DictionaryManager.class.getResource("/dictionaries.zip").getFile()
-				+ "!/org.cfeclipse.cfml/dictionary/";
+		try {
+			fBuiltInDictionaryPath = "jar:"
+					+ DictionaryManager.class.getClassLoader()
+							.getResource("org.cfeclipse.cfml/dictionary/dictionaryconfig.xml").getFile()
+							.replace("dictionaryconfig.xml", "");
+		} catch (Exception e) {
+			fBuiltInDictionaryPath = "jar:file:" + DictionaryManager.class.getResource("/dictionaries.zip").getFile()
+					+ "!/org.cfeclipse.cfml/dictionary/";
+		}
 		DICTIONARY_DIR = fPrefs.getDictionaryDir();
 		CF_DICTIONARY = fPrefs.getCFDictionary();
 	}
@@ -110,9 +117,12 @@ public class DictionaryManager {
 			if (fPrefs.getDictionaryDir().length() != 0) {
 				dictionaryConfig = builder.parse(new File(fPrefs.getDictionaryDir() + "/dictionaryconfig.xml"));
 			} else {
-				System.out.println(fBuiltInDictionaryPath);
-				URL dc = new URL(fBuiltInDictionaryPath + "dictionaryconfig.xml");
-				dictionaryConfig = builder.parse(dc.openStream());
+				// System.out.println("u->" + fBuiltInDictionaryPath + "dictionaryconfig.xml");
+				// URL dc = new URL(fBuiltInDictionaryPath + "dictionaryconfig.xml");
+				// System.out.println("url->" + dc);
+				// dictionaryConfig = builder.parse(dc.openStream());
+				dictionaryConfig = builder.parse(DictionaryManager.class
+						.getResourceAsStream("/org.cfeclipse.cfml/dictionary/dictionaryconfig.xml"));
 			}
 			// URL configurl = DictionaryManager.class.getResource("/dictionary/dictionaryconfig.xml");
 			// URL configurl = new URL(dictionaryConfigURL + "/dictionaryconfig.xml");
@@ -334,7 +344,10 @@ public class DictionaryManager {
 	
 	private static String getDictionaryLocation(String path) {
 		if (fPrefs.getDictionaryDir().length() == 0) {
-			path = fBuiltInDictionaryPath + path;
+			path = DictionaryManager.class.getResource("/org.cfeclipse.cfml/dictionary/" + path).toString();
+			if (path == null) {
+				path = fBuiltInDictionaryPath + path;
+			}
 		} else {
 			if (path.startsWith("http")) {
 				File dictFile = new File(fPrefs.getDictionaryDir() + path);
